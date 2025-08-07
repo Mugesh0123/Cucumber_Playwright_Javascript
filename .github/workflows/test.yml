@@ -1,0 +1,189 @@
+name: Automation Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    - cron: '0 2 * * *'  # Run daily at 2 AM
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [16.x, 18.x]
+        browser: [chromium, firefox, webkit]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Install Playwright browsers
+      run: npm run install:playwright
+      
+    - name: Run linting
+      run: npm run lint
+      
+    - name: Run tests
+      run: npm run test:smoke
+      env:
+        BASE_URL: https://demowebshop.tricentis.com
+        BROWSER: ${{ matrix.browser }}
+        HEADLESS: true
+        TIMEOUT: 30000
+        
+    - name: Run API tests
+      run: npm run test:api
+      env:
+        API_BASE_URL: https://api.demowebshop.tricentis.com
+        API_KEY: ${{ secrets.API_KEY }}
+        
+    - name: Generate reports
+      run: npm run report
+      
+    - name: Upload test results
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results-${{ matrix.browser }}-${{ matrix.node-version }}
+        path: |
+          reports/
+          screenshots/
+          videos/
+          logs/
+          
+    - name: Upload Allure results
+      uses: actions/upload-artifact@v3
+      with:
+        name: allure-results-${{ matrix.browser }}
+        path: reports/allure-results/
+        
+  performance:
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18.x'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Run performance tests
+      run: npm run test:performance
+      env:
+        BASE_URL: https://demowebshop.tricentis.com
+        BROWSER: chromium
+        HEADLESS: true
+        
+    - name: Upload performance results
+      uses: actions/upload-artifact@v3
+      with:
+        name: performance-results
+        path: reports/performance/
+        
+  accessibility:
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18.x'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Run accessibility tests
+      run: npm run test:accessibility
+      env:
+        BASE_URL: https://demowebshop.tricentis.com
+        BROWSER: chromium
+        HEADLESS: true
+        
+    - name: Upload accessibility results
+      uses: actions/upload-artifact@v3
+      with:
+        name: accessibility-results
+        path: reports/
+        
+  security:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18.x'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Run security audit
+      run: npm run security:audit
+      
+    - name: Run dependency check
+      run: npm audit --audit-level=moderate
+      
+  notify:
+    runs-on: ubuntu-latest
+    needs: [test, performance, accessibility, security]
+    if: always()
+    
+    steps:
+    - name: Download test results
+      uses: actions/download-artifact@v3
+      with:
+        path: test-results/
+        
+    - name: Generate summary report
+      run: |
+        echo "## Test Execution Summary" >> $GITHUB_STEP_SUMMARY
+        echo "- **Status**: ${{ needs.test.result }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Performance**: ${{ needs.performance.result }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Accessibility**: ${{ needs.accessibility.result }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Security**: ${{ needs.security.result }}" >> $GITHUB_STEP_SUMMARY
+        
+    - name: Send Slack notification
+      if: failure()
+      uses: 8398a7/action-slack@v3
+      with:
+        status: failure
+        webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+        channel: '#automation-alerts'
+        text: 'Automation tests failed! Check the logs for details.'
+        
+    - name: Send success notification
+      if: success()
+      uses: 8398a7/action-slack@v3
+      with:
+        status: success
+        webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+        channel: '#automation-success'
+        text: 'All automation tests passed! 🎉' 

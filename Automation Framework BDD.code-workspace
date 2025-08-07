@@ -1,0 +1,36 @@
+{
+  "folders": [
+    {
+      "name": "Automation Framework BDD",
+      "path": "."
+    }
+  ],
+  "settings": {
+    "cucumber.features": [
+      "features/**/*.feature"
+    ],
+    "cucumber.glue": [
+      "step-definitions/**/*.js",
+      "support/**/*.js"
+    ],
+    "cucumber.snippets": {
+      "framework": "async-await"
+    },
+    "cucumber.smartSnippets": true,
+    "cucumber.strictGherkinCompletion": false,
+    "cucumber.strictGherkinValidation": false,
+    "files.associations": {
+      "*.feature": "cucumber"
+    },
+    "search.exclude": {
+      "**/node_modules": true,
+      "**/reports": true
+    }
+  },
+  "extensions": {
+    "recommendations": [
+      "cucumber.cucumber",
+      "ms-vscode.vscode-typescript-next"
+    ]
+  }
+} 
