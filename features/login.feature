@@ -1,6 +1,6 @@
 @login @smoke
 Feature: Login Functionality
-  As a user
+  As a user 14
   I want to be able to login to the demo webshop
   So that I can access my account and make purchases
 
