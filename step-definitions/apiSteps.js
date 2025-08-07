@@ -2,7 +2,7 @@ const { Given, When, Then } = require('@cucumber/cucumber');
 const { expect } = require('chai');
 const ApiClient = require('../support/apiClient');
 const Joi = require('joi');
-const faker = require('faker');
+const { faker } = require('@faker-js/faker');
 
 // Test data storage
 let testData = {
@@ -44,7 +44,7 @@ Given('I have a valid API client configured', async function () {
 
 Given('I have test data prepared', async function () {
   testData.testUser = {
-    name: faker.name.findName(),
+    name: faker.person.fullName(),
     email: faker.internet.email(),
     password: faker.internet.password()
   };
@@ -83,7 +83,7 @@ When('I authenticate with invalid credentials', async function () {
 
 When('I create a new user with valid data', async function () {
   const userData = {
-    name: faker.name.findName(),
+    name: faker.person.fullName(),
     email: faker.internet.email(),
     password: faker.internet.password()
   };

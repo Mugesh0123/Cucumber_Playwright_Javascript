@@ -140,15 +140,15 @@ Before(async function (scenario) {
 
   // Handle different test types
   if (this.scenarioTags.includes('@performance')) {
-    await this.setupPerformanceMonitoring();
+    await setupPerformanceMonitoring.call(this);
   }
 
   if (this.scenarioTags.includes('@accessibility')) {
-    await this.setupAccessibilityTesting();
+    await setupAccessibilityTesting.call(this);
   }
 
   if (this.scenarioTags.includes('@visual')) {
-    await this.setupVisualTesting();
+    await setupVisualTesting.call(this);
   }
 
   // Set up custom timeouts for different test types
@@ -205,27 +205,27 @@ After(async function (scenario) {
 
   // Handle test failure
   if (scenario.result.status === 'FAILED') {
-    await this.handleTestFailure(scenario);
+    await handleTestFailure.call(this, scenario);
   }
 
   // Capture final screenshot for all scenarios
   if (process.env.SCREENSHOT_ON_FAILURE === 'true' || 
       this.scenarioTags.includes('@screenshot')) {
-    await this.captureFinalScreenshot(scenario);
+    await captureFinalScreenshot.call(this, scenario);
   }
 
   // Generate performance report for performance tests
   if (this.scenarioTags.includes('@performance')) {
-    await this.generatePerformanceReport();
+    await generatePerformanceReport.call(this);
   }
 
   // Generate accessibility report
   if (this.scenarioTags.includes('@accessibility')) {
-    await this.generateAccessibilityReport();
+    await generateAccessibilityReport.call(this);
   }
 
   // Clean up test data
-  await this.cleanupTestData();
+  await cleanupTestData.call(this);
 
   // Close browser
   if (this.base) {

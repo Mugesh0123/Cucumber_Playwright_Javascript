@@ -137,6 +137,10 @@ class Base {
       this.context = await this.browser.newContext(contextOptions);
       this.page = await this.context.newPage();
       
+      // Initialize webElements
+      const WebElements = require('./webElements');
+      this.webElements = new WebElements(this.page);
+      
       // Set default timeout
       await this.page.setDefaultTimeout(parseInt(process.env.TIMEOUT) || 30000);
       

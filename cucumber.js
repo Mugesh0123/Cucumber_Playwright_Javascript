@@ -15,6 +15,11 @@ module.exports = {
       snippetInterface: 'async-await'
     },
     parallel: 1,
-    retry: 1
+    retry: 1,
+    timeout: 30000,
+    worldParameters: {
+      timeout: 30000,
+      retryAttempts: 2
+    }
   }
 }; 
